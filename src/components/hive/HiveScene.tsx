@@ -15,9 +15,16 @@ interface HiveSceneProps {
   equipmentWidth: EquipmentWidth;
   boxes: HiveBoxSpec[];
   onFrameSelect?: (hiveBoxId: string, frameNumber: number) => void;
+  // Keys formatted as `${hiveBoxId}:${frameNumber}`.
+  highlightedFrameKeys?: Set<string>;
 }
 
-export function HiveScene({ equipmentWidth, boxes, onFrameSelect }: HiveSceneProps) {
+export function HiveScene({
+  equipmentWidth,
+  boxes,
+  onFrameSelect,
+  highlightedFrameKeys,
+}: HiveSceneProps) {
   const [selected, setSelected] = useState<{ hiveBoxId: string; frameNumber: number } | null>(
     null,
   );
@@ -50,16 +57,26 @@ export function HiveScene({ equipmentWidth, boxes, onFrameSelect }: HiveScenePro
         <ambientLight intensity={0.6} />
         <directionalLight position={[5, 5, 5]} intensity={1} />
         <Environment preset="park" />
-        {positioned.map(({ box, y }) => (
-          <HiveBoxMesh
-            key={box.id}
-            box={box}
-            width={width}
-            y={y}
-            selectedFrame={selected?.hiveBoxId === box.id ? selected.frameNumber : null}
-            onFrameClick={handleFrameClick}
-          />
-        ))}
+        {positioned.map(({ box, y }) => {
+          const highlightedFrameNumbers = highlightedFrameKeys
+            ? new Set(
+                [...highlightedFrameKeys]
+                  .filter((key) => key.startsWith(`${box.id}:`))
+                  .map((key) => Number(key.split(":")[1])),
+              )
+            : undefined;
+          return (
+            <HiveBoxMesh
+              key={box.id}
+              box={box}
+              width={width}
+              y={y}
+              selectedFrame={selected?.hiveBoxId === box.id ? selected.frameNumber : null}
+              highlightedFrameNumbers={highlightedFrameNumbers}
+              onFrameClick={handleFrameClick}
+            />
+          );
+        })}
         <OrbitControls enablePan enableZoom enableRotate target={[0, totalHeight / 2, 0]} />
       </Canvas>
     </div>

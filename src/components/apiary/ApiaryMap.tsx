@@ -20,8 +20,10 @@ export interface HivePin {
 interface ApiaryMapProps {
   address: string;
   hives: HivePin[];
+  pendingPin?: { lat: number; lng: number } | null;
   onHiveClick?: (hiveId: string) => void;
   onMapClick?: (lat: number, lng: number) => void;
+  onCenterResolved?: (center: { lat: number; lng: number }) => void;
 }
 
 const DEFAULT_CENTER = { lat: 39.8283, lng: -98.5795 }; // continental US fallback
@@ -49,14 +51,26 @@ function AddressGeocoder({
   return null;
 }
 
-export function ApiaryMap({ address, hives, onHiveClick, onMapClick }: ApiaryMapProps) {
+export function ApiaryMap({
+  address,
+  hives,
+  pendingPin,
+  onHiveClick,
+  onMapClick,
+  onCenterResolved,
+}: ApiaryMapProps) {
   const [center, setCenter] = useState(DEFAULT_CENTER);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID ?? "DEMO_MAP_ID";
 
+  function handleResolved(newCenter: { lat: number; lng: number }) {
+    setCenter(newCenter);
+    onCenterResolved?.(newCenter);
+  }
+
   return (
     <APIProvider apiKey={apiKey}>
-      <AddressGeocoder address={address} onResolved={setCenter} />
+      <AddressGeocoder address={address} onResolved={handleResolved} />
       <Map
         mapId={mapId}
         center={center}
@@ -80,6 +94,11 @@ export function ApiaryMap({ address, hives, onHiveClick, onMapClick }: ApiaryMap
             <Pin background="#FFD369" borderColor="#222831" glyphColor="#222831" />
           </AdvancedMarker>
         ))}
+        {pendingPin && (
+          <AdvancedMarker position={pendingPin}>
+            <Pin background="#393E46" borderColor="#EEEEEE" glyphColor="#EEEEEE" />
+          </AdvancedMarker>
+        )}
       </Map>
     </APIProvider>
   );

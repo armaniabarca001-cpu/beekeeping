@@ -1,15 +1,11 @@
-export type BoxType =
-  | "hive_stand"
-  | "landing_board"
-  | "entrance_reducer"
-  | "deep"
-  | "medium_super"
-  | "shallow_super"
-  | "queen_excluder"
-  | "inner_cover"
-  | "outer_cover";
+export type {
+  BoxType,
+  EquipmentWidth,
+  FoundationType,
+} from "@/lib/hive-boxes";
+export { BOX_TYPES, FRAME_HOLDING_BOX_TYPES, boxHoldsFrames, BOX_LABELS } from "@/lib/hive-boxes";
 
-export type EquipmentWidth = "eight_frame" | "ten_frame";
+import type { BoxType, EquipmentWidth } from "@/lib/hive-boxes";
 
 export interface HiveBoxSpec {
   id: string;
@@ -18,13 +14,6 @@ export interface HiveBoxSpec {
   frameCapacity: number;
   framesInstalledCount: number;
 }
-
-// Boxes that physically hold frames a beekeeper can click into.
-export const FRAME_HOLDING_BOX_TYPES: BoxType[] = [
-  "deep",
-  "medium_super",
-  "shallow_super",
-];
 
 export const BOX_HEIGHTS: Record<BoxType, number> = {
   hive_stand: 0.3,

@@ -15,11 +15,20 @@ interface FrameMeshProps {
   x: number;
   height: number;
   isSelected: boolean;
+  isHighlighted: boolean;
   onClick: () => void;
 }
 
-function FrameMesh({ x, height, isSelected, onClick }: FrameMeshProps) {
+function FrameMesh({ x, height, isSelected, isHighlighted, onClick }: FrameMeshProps) {
   const [hovered, setHovered] = useState(false);
+
+  const color = isSelected
+    ? "#ffd369"
+    : isHighlighted
+      ? "#ef4444"
+      : hovered
+        ? "#ffe5a5"
+        : "#fff4da";
 
   return (
     <mesh
@@ -35,9 +44,7 @@ function FrameMesh({ x, height, isSelected, onClick }: FrameMeshProps) {
       onPointerOut={() => setHovered(false)}
     >
       <boxGeometry args={[FRAME_THICKNESS, height * 0.85, DEPTH * 0.85]} />
-      <meshStandardMaterial
-        color={isSelected ? "#ffd369" : hovered ? "#ffe5a5" : "#fff4da"}
-      />
+      <meshStandardMaterial color={color} emissive={isHighlighted ? "#ef4444" : "#000000"} emissiveIntensity={isHighlighted ? 0.4 : 0} />
     </mesh>
   );
 }
@@ -47,6 +54,7 @@ interface HiveBoxMeshProps {
   width: number;
   y: number;
   selectedFrame: number | null;
+  highlightedFrameNumbers?: Set<number>;
   onFrameClick: (hiveBoxId: string, frameNumber: number) => void;
 }
 
@@ -55,6 +63,7 @@ export function HiveBoxMesh({
   width,
   y,
   selectedFrame,
+  highlightedFrameNumbers,
   onFrameClick,
 }: HiveBoxMeshProps) {
   const height = BOX_HEIGHTS[box.boxType];
@@ -85,6 +94,7 @@ export function HiveBoxMesh({
           x={x}
           height={height}
           isSelected={selectedFrame === i + 1}
+          isHighlighted={highlightedFrameNumbers?.has(i + 1) ?? false}
           onClick={() => onFrameClick(box.id, i + 1)}
         />
       ))}

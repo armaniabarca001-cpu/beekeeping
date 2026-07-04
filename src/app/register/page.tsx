@@ -37,7 +37,7 @@ export default function RegisterPage() {
       router.push("/login");
       return;
     }
-    router.push("/dashboard");
+    router.push("/apiaries");
   }
 
   return (

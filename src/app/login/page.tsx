@@ -29,7 +29,7 @@ export default function LoginPage() {
       setError("Invalid email or password.");
       return;
     }
-    router.push("/dashboard");
+    router.push("/apiaries");
   }
 
   return (
@@ -50,7 +50,7 @@ export default function LoginPage() {
 
           <button
             type="button"
-            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+            onClick={() => signIn("google", { callbackUrl: "/apiaries" })}
             className="mb-6 flex w-full items-center justify-center gap-2 rounded-full border border-slate-300 bg-white py-3 font-medium text-navy-500 transition-colors hover:bg-offwhite-300"
           >
             Continue with Google
