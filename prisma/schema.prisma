@@ -1,0 +1,314 @@
+// Prisma schema for HiveTracker (spec Section 5).
+// Multi-tenant by user_id: apiaries -> hives -> hive_boxes -> frames -> inspections
+// all scope down from the owning user (spec Section 7).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Enums ----------
+
+enum EquipmentWidth {
+  eight_frame
+  ten_frame
+}
+
+enum BoxType {
+  hive_stand
+  landing_board
+  entrance_reducer
+  deep
+  medium_super
+  shallow_super
+  queen_excluder
+  inner_cover
+  outer_cover
+}
+
+enum FoundationType {
+  wax
+  plastic
+  foundationless
+}
+
+enum MediaType {
+  audio
+  video
+}
+
+enum FrameSide {
+  side_a
+  side_b
+}
+
+enum Quadrant {
+  top_left
+  top_right
+  bottom_left
+  bottom_right
+}
+
+enum QueenCellType {
+  swarm
+  supersedure
+  emergency
+  play_cup
+}
+
+enum QueenCellLocation {
+  bottom_edge
+  side_edge
+  mid_face
+  unknown
+}
+
+enum TargetPest {
+  varroa
+  small_hive_beetle
+  nosema
+  other
+}
+
+// ---------- Core structure ----------
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String?   @map("password_hash")
+  name            String?
+  image           String?
+  yearsBeekeeping Int?      @map("years_beekeeping")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  apiaries Apiary[]
+
+  @@map("users")
+}
+
+model Apiary {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  name      String
+  address   String
+  lat       Float
+  lng       Float
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hives Hive[]
+
+  @@index([userId])
+  @@map("apiaries")
+}
+
+model Hive {
+  id             String         @id @default(cuid())
+  apiaryId       String         @map("apiary_id")
+  name           String
+  equipmentWidth EquipmentWidth @map("equipment_width")
+  lat            Float
+  lng            Float
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  deletedAt      DateTime?      @map("deleted_at")
+
+  apiary           Apiary            @relation(fields: [apiaryId], references: [id], onDelete: Cascade)
+  hiveBoxes        HiveBox[]
+  inspections      Inspection[]
+  treatments       Treatment[]
+  weatherSnapshots WeatherSnapshot[]
+
+  @@index([apiaryId])
+  @@map("hives")
+}
+
+model HiveBox {
+  id                   String   @id @default(cuid())
+  hiveId               String   @map("hive_id")
+  boxType              BoxType  @map("box_type")
+  positionOrder        Int      @map("position_order")
+  frameCapacity        Int      @map("frame_capacity")
+  framesInstalledCount Int      @map("frames_installed_count")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  hive   Hive    @relation(fields: [hiveId], references: [id], onDelete: Cascade)
+  frames Frame[]
+
+  @@index([hiveId])
+  @@map("hive_boxes")
+}
+
+model Frame {
+  id             String         @id @default(cuid())
+  hiveBoxId      String         @map("hive_box_id")
+  frameNumber    Int            @map("frame_number")
+  foundationType FoundationType @map("foundation_type")
+  dateInstalled  DateTime       @map("date_installed")
+
+  hiveBox            HiveBox           @relation(fields: [hiveBoxId], references: [id], onDelete: Cascade)
+  inspectionMedia    InspectionMedia[]
+  frameObservations  FrameObservation[]
+
+  @@index([hiveBoxId])
+  @@map("frames")
+}
+
+// ---------- Inspections & observations ----------
+
+model Inspection {
+  id            String    @id @default(cuid())
+  hiveId        String    @map("hive_id")
+  timestamp     DateTime  @default(now())
+  enteredByUserId String  @map("entered_by_user_id")
+  generalNotes  String?   @map("general_notes")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  deletedAt     DateTime? @map("deleted_at")
+
+  hive              Hive               @relation(fields: [hiveId], references: [id], onDelete: Cascade)
+  media             InspectionMedia[]
+  frameObservations FrameObservation[]
+  weatherSnapshots  WeatherSnapshot[]
+
+  @@index([hiveId])
+  @@map("inspections")
+}
+
+model InspectionMedia {
+  id              String    @id @default(cuid())
+  inspectionId    String    @map("inspection_id")
+  frameId         String?   @map("frame_id")
+  mediaType       MediaType @map("media_type")
+  fileUrl         String    @map("file_url")
+  rawTranscript   String?   @map("raw_transcript")
+  durationSeconds Int?      @map("duration_seconds")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  inspection Inspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  frame      Frame?     @relation(fields: [frameId], references: [id], onDelete: SetNull)
+
+  @@index([inspectionId])
+  @@index([frameId])
+  @@map("inspection_media")
+}
+
+model FrameObservation {
+  id             String    @id @default(cuid())
+  inspectionId   String    @map("inspection_id")
+  frameId        String    @map("frame_id")
+  side           FrameSide
+  hasBrood       Boolean   @default(false) @map("has_brood")
+  hasCappedBrood Boolean   @default(false) @map("has_capped_brood")
+  hasEggs        Boolean   @default(false) @map("has_eggs")
+  hasLarvae      Boolean   @default(false) @map("has_larvae")
+  queenPresent   Boolean   @default(false) @map("queen_present")
+  hasCappedHoney Boolean   @default(false) @map("has_capped_honey")
+  hasNectar      Boolean   @default(false) @map("has_nectar")
+  cappedHoneyPct Int?      @map("capped_honey_pct")
+  notes          String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  inspection          Inspection                 @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  frame               Frame                      @relation(fields: [frameId], references: [id], onDelete: Cascade)
+  quadrantObservations FrameQuadrantObservation[]
+  queenCells          QueenCell[]
+
+  @@index([inspectionId])
+  @@index([frameId])
+  @@map("frame_observations")
+}
+
+model FrameQuadrantObservation {
+  id                 String   @id @default(cuid())
+  frameObservationId String   @map("frame_observation_id")
+  quadrant           Quadrant
+  hasBrood           Boolean  @default(false) @map("has_brood")
+  hasCappedBrood     Boolean  @default(false) @map("has_capped_brood")
+  hasEggs            Boolean  @default(false) @map("has_eggs")
+  hasLarvae          Boolean  @default(false) @map("has_larvae")
+  hasCappedHoney     Boolean  @default(false) @map("has_capped_honey")
+  hasNectar          Boolean  @default(false) @map("has_nectar")
+  notes              String?
+
+  frameObservation FrameObservation @relation(fields: [frameObservationId], references: [id], onDelete: Cascade)
+
+  @@index([frameObservationId])
+  @@map("frame_quadrant_observations")
+}
+
+model QueenCell {
+  id                 String            @id @default(cuid())
+  frameObservationId String            @map("frame_observation_id")
+  cellType           QueenCellType     @map("cell_type")
+  locationOnFrame    QueenCellLocation @map("location_on_frame")
+  capped             Boolean           @default(false)
+  count              Int               @default(1)
+
+  frameObservation FrameObservation @relation(fields: [frameObservationId], references: [id], onDelete: Cascade)
+
+  @@index([frameObservationId])
+  @@map("queen_cells")
+}
+
+// ---------- Treatments & reminders ----------
+
+model Treatment {
+  id              String     @id @default(cuid())
+  hiveId          String     @map("hive_id")
+  productName     String     @map("product_name")
+  targetPest      TargetPest @map("target_pest")
+  stripCount      Int        @map("strip_count")
+  startDate       DateTime   @map("start_date")
+  durationDays    Int        @map("duration_days")
+  miteCountBefore Int?       @map("mite_count_before")
+  miteCountAfter  Int?       @map("mite_count_after")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  hive      Hive                @relation(fields: [hiveId], references: [id], onDelete: Cascade)
+  reminders TreatmentReminder[]
+
+  @@index([hiveId])
+  @@map("treatments")
+}
+
+model TreatmentReminder {
+  id                    String   @id @default(cuid())
+  treatmentId           String   @map("treatment_id")
+  remindAt              DateTime @map("remind_at")
+  googleCalendarEventId String?  @map("google_calendar_event_id")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  treatment Treatment @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
+
+  @@index([treatmentId])
+  @@map("treatment_reminders")
+}
+
+// ---------- Environment ----------
+
+model WeatherSnapshot {
+  id           String   @id @default(cuid())
+  hiveId       String?  @map("hive_id")
+  inspectionId String?  @map("inspection_id")
+  wind         Float?
+  humidity     Float?
+  temp         Float?
+  pollen       Float?
+  timestamp    DateTime @default(now())
+
+  hive       Hive?       @relation(fields: [hiveId], references: [id], onDelete: Cascade)
+  inspection Inspection? @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+
+  @@index([hiveId])
+  @@index([inspectionId])
+  @@map("weather_snapshots")
+}

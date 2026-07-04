@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --background: #eeeeee;
+  --foreground: #222831;
+
+  /* HiveTracker palette (spec Section 3) */
+  --color-navy-100: #c8c9cc;
+  --color-navy-300: #7a7e83;
+  --color-navy-500: #222831;
+  --color-navy-700: #1a1e25;
+  --color-navy-900: #0f1216;
+
+  --color-slate-100: #cecfd1;
+  --color-slate-300: #888b90;
+  --color-slate-500: #393e46;
+  --color-slate-700: #2b2e34;
+  --color-slate-900: #1a1c20;
+
+  --color-honey-100: #fff4da;
+  --color-honey-300: #ffe5a5;
+  --color-honey-500: #ffd369;
+  --color-honey-700: #bf9e4f;
+  --color-honey-900: #735f2f;
+
+  --color-offwhite-100: #fbfbfb;
+  --color-offwhite-300: #f5f5f5;
+  --color-offwhite-500: #eeeeee;
+  --color-offwhite-700: #b2b2b2;
+  --color-offwhite-900: #6b6b6b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-rubik);
+
+  --color-navy-100: var(--color-navy-100);
+  --color-navy-300: var(--color-navy-300);
+  --color-navy-500: var(--color-navy-500);
+  --color-navy-700: var(--color-navy-700);
+  --color-navy-900: var(--color-navy-900);
+
+  --color-slate-100: var(--color-slate-100);
+  --color-slate-300: var(--color-slate-300);
+  --color-slate-500: var(--color-slate-500);
+  --color-slate-700: var(--color-slate-700);
+  --color-slate-900: var(--color-slate-900);
+
+  --color-honey-100: var(--color-honey-100);
+  --color-honey-300: var(--color-honey-300);
+  --color-honey-500: var(--color-honey-500);
+  --color-honey-700: var(--color-honey-700);
+  --color-honey-900: var(--color-honey-900);
+
+  --color-offwhite-100: var(--color-offwhite-100);
+  --color-offwhite-300: var(--color-offwhite-300);
+  --color-offwhite-500: var(--color-offwhite-500);
+  --color-offwhite-700: var(--color-offwhite-700);
+  --color-offwhite-900: var(--color-offwhite-900);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #222831;
+    --foreground: #eeeeee;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
