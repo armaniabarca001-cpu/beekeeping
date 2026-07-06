@@ -3,24 +3,32 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import { AddressAutocomplete } from "@/components/apiary/AddressAutocomplete";
 
 const ApiaryMap = dynamic(
   () => import("@/components/apiary/ApiaryMap").then((m) => m.ApiaryMap),
   { ssr: false },
 );
 
+const DEFAULT_CENTER = { lat: 39.8283, lng: -98.5795 }; // continental US fallback
+
 export default function NewApiaryPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
-  const [lookupAddress, setLookupAddress] = useState("");
-  const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
+  const [mapZoom, setMapZoom] = useState(4);
+  const [pendingPin, setPendingPin] = useState<{ lat: number; lng: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleCreate() {
-    if (!center) {
-      setError("Look up an address first so the apiary has a location.");
+    if (!pendingPin) {
+      setError("Click the exact spot on the map where the apiary is.");
+      return;
+    }
+    if (!name) {
+      setError("Give the apiary a name.");
       return;
     }
     setSubmitting(true);
@@ -29,7 +37,7 @@ export default function NewApiaryPage() {
     const res = await fetch("/api/apiaries", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, address, lat: center.lat, lng: center.lng }),
+      body: JSON.stringify({ name, address, lat: pendingPin.lat, lng: pendingPin.lng }),
     });
 
     if (!res.ok) {
@@ -60,26 +68,23 @@ export default function NewApiaryPage() {
 
         <label className="flex flex-col gap-1 text-sm">
           Address
-          <input
+          <AddressAutocomplete
             value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="123 Main St, Springfield"
-            className="rounded-lg border border-slate-100 bg-white px-4 py-2 outline-none focus:border-honey-500"
+            onChange={setAddress}
+            onSelect={(s) => {
+              setMapCenter({ lat: s.lat, lng: s.lng });
+              setMapZoom(19);
+            }}
           />
         </label>
 
-        <button
-          type="button"
-          onClick={() => setLookupAddress(address)}
-          disabled={!address}
-          className="rounded-full border border-slate-300 py-2 font-medium hover:bg-offwhite-300 disabled:opacity-50"
-        >
-          Locate on map
-        </button>
+        <p className="text-xs text-slate-500">
+          Search an address to jump the map there, then click the exact spot to place your apiary.
+        </p>
 
-        {center && (
+        {pendingPin && (
           <p className="text-xs text-slate-500">
-            Resolved: {center.lat.toFixed(5)}, {center.lng.toFixed(5)}
+            Placed at: {pendingPin.lat.toFixed(5)}, {pendingPin.lng.toFixed(5)}
           </p>
         )}
 
@@ -88,21 +93,24 @@ export default function NewApiaryPage() {
         <button
           type="button"
           onClick={handleCreate}
-          disabled={submitting || !name || !center}
+          disabled={submitting || !name || !pendingPin}
           className="mt-2 rounded-full bg-honey-500 py-3 font-semibold text-navy-500 hover:bg-honey-300 disabled:opacity-50"
         >
           {submitting ? "Creating..." : "Create apiary"}
         </button>
       </div>
 
-      <div className="flex-1">
-        {lookupAddress ? (
-          <ApiaryMap address={lookupAddress} hives={[]} onCenterResolved={setCenter} />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-navy-900 text-slate-300">
-            Enter an address and click &quot;Locate on map&quot; to preview it here.
-          </div>
-        )}
+      <div className="relative flex-1">
+        <ApiaryMap
+          center={mapCenter}
+          zoom={mapZoom}
+          hives={[]}
+          pendingPin={pendingPin}
+          onMapClick={(lat, lng) => setPendingPin({ lat, lng })}
+        />
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-4 py-2 text-xs text-navy-500 shadow">
+          Click the map to place your apiary
+        </div>
       </div>
     </div>
   );

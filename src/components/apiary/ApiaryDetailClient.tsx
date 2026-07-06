@@ -14,6 +14,7 @@ interface ApiaryDetailClientProps {
   apiaryId: string;
   apiaryName: string;
   address: string;
+  center: { lat: number; lng: number };
   hives: HivePin[];
 }
 
@@ -21,6 +22,7 @@ export function ApiaryDetailClient({
   apiaryId,
   apiaryName,
   address,
+  center,
   hives,
 }: ApiaryDetailClientProps) {
   const router = useRouter();
@@ -40,7 +42,7 @@ export function ApiaryDetailClient({
 
       <div className="relative flex-1">
         <ApiaryMap
-          address={address}
+          center={center}
           hives={hives}
           pendingPin={pendingPin}
           onHiveClick={(hiveId) => router.push(`/hives/${hiveId}`)}

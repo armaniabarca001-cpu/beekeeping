@@ -27,7 +27,7 @@ export default function ApiaryDemoPage() {
       </div>
       <div className="flex-1">
         <ApiaryMap
-          address="San Francisco, CA"
+          center={{ lat: 37.7749, lng: -122.4194 }}
           hives={DEMO_HIVES}
           onHiveClick={setSelected}
           onMapClick={(lat, lng) => console.log("new hive pin at", lat, lng)}

@@ -24,6 +24,7 @@ export default async function ApiaryDetailPage({ params }: PageProps) {
       apiaryId={apiary.id}
       apiaryName={apiary.name}
       address={apiary.address}
+      center={{ lat: apiary.lat, lng: apiary.lng }}
       hives={apiary.hives.map((h) => ({ id: h.id, name: h.name, lat: h.lat, lng: h.lng }))}
     />
   );

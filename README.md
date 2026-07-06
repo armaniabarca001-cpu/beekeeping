@@ -7,7 +7,7 @@ and track frame-level history over time. Langstroth hives only (8-frame and 10-f
 
 Next.js (App Router, TypeScript) · Tailwind CSS v4 · Prisma 7 + Postgres · NextAuth
 (Credentials + Google OAuth) · react-three-fiber/drei (3D hive builder) ·
-@vis.gl/react-google-maps (apiary satellite map)
+react-leaflet + Esri World Imagery + OSM Nominatim (apiary satellite map, no API key needed)
 
 ## Getting started
 
@@ -22,7 +22,7 @@ Open [http://localhost:3000](http://localhost:3000). Demo routes that don't requ
 database or API keys to look at the 3D hive builder and map integration:
 
 - `/hives/demo` - react-three-fiber hive stack (sample 2-deep + 1-medium-super hive)
-- `/apiaries/demo` - Google Maps satellite view with a sample hive pin
+- `/apiaries/demo` - satellite map view with a sample hive pin
 
 ## Deployment
 

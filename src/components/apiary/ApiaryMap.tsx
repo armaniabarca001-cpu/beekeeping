@@ -1,14 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  APIProvider,
-  Map,
-  AdvancedMarker,
-  Pin,
-  useMapsLibrary,
-  type MapMouseEvent,
-} from "@vis.gl/react-google-maps";
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
+import L from "leaflet";
 
 export interface HivePin {
   id: string;
@@ -18,88 +12,72 @@ export interface HivePin {
 }
 
 interface ApiaryMapProps {
-  address: string;
+  center: { lat: number; lng: number };
+  zoom?: number;
   hives: HivePin[];
   pendingPin?: { lat: number; lng: number } | null;
   onHiveClick?: (hiveId: string) => void;
   onMapClick?: (lat: number, lng: number) => void;
-  onCenterResolved?: (center: { lat: number; lng: number }) => void;
 }
 
-const DEFAULT_CENTER = { lat: 39.8283, lng: -98.5795 }; // continental US fallback
+function dotIcon(background: string, border: string) {
+  return L.divIcon({
+    className: "",
+    html: `<div style="background:${background};border:2px solid ${border};width:20px;height:20px;border-radius:9999px;box-shadow:0 1px 4px rgba(0,0,0,0.4);"></div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+  });
+}
 
-function AddressGeocoder({
-  address,
-  onResolved,
-}: {
-  address: string;
-  onResolved: (center: { lat: number; lng: number }) => void;
-}) {
-  const geocodingLib = useMapsLibrary("geocoding");
+const hiveIcon = dotIcon("#FFD369", "#222831");
+const pendingIcon = dotIcon("#393E46", "#EEEEEE");
 
-  useEffect(() => {
-    if (!geocodingLib || !address) return;
-    const geocoder = new geocodingLib.Geocoder();
-    geocoder.geocode({ address }, (results, status) => {
-      if (status === "OK" && results?.[0]) {
-        const loc = results[0].geometry.location;
-        onResolved({ lat: loc.lat(), lng: loc.lng() });
-      }
-    });
-  }, [geocodingLib, address, onResolved]);
-
+function ClickHandler({ onClick }: { onClick?: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onClick?.(e.latlng.lat, e.latlng.lng);
+    },
+  });
   return null;
 }
 
-export function ApiaryMap({
-  address,
-  hives,
-  pendingPin,
-  onHiveClick,
-  onMapClick,
-  onCenterResolved,
-}: ApiaryMapProps) {
-  const [center, setCenter] = useState(DEFAULT_CENTER);
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
-  const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID ?? "DEMO_MAP_ID";
+function Recenter({ lat, lng, zoom }: { lat: number; lng: number; zoom: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView([lat, lng], zoom, { animate: false });
+  }, [map, lat, lng, zoom]);
+  return null;
+}
 
-  function handleResolved(newCenter: { lat: number; lng: number }) {
-    setCenter(newCenter);
-    onCenterResolved?.(newCenter);
-  }
+export function ApiaryMap({ center, zoom = 19, hives, pendingPin, onHiveClick, onMapClick }: ApiaryMapProps) {
+  // MapContainer's center/zoom are initial-mount-only in react-leaflet; all
+  // subsequent position changes go through the imperative Recenter child.
+  const [initial] = useState({ center, zoom });
 
   return (
-    <APIProvider apiKey={apiKey}>
-      <AddressGeocoder address={address} onResolved={handleResolved} />
-      <Map
-        mapId={mapId}
-        center={center}
-        defaultZoom={19}
-        mapTypeId="satellite"
-        tilt={0}
-        gestureHandling="greedy"
-        onClick={(e: MapMouseEvent) => {
-          const latLng = e.detail.latLng;
-          if (latLng) onMapClick?.(latLng.lat, latLng.lng);
-        }}
-        style={{ width: "100%", height: "100%" }}
-      >
-        {hives.map((hive) => (
-          <AdvancedMarker
-            key={hive.id}
-            position={{ lat: hive.lat, lng: hive.lng }}
-            title={hive.name}
-            onClick={() => onHiveClick?.(hive.id)}
-          >
-            <Pin background="#FFD369" borderColor="#222831" glyphColor="#222831" />
-          </AdvancedMarker>
-        ))}
-        {pendingPin && (
-          <AdvancedMarker position={pendingPin}>
-            <Pin background="#393E46" borderColor="#EEEEEE" glyphColor="#EEEEEE" />
-          </AdvancedMarker>
-        )}
-      </Map>
-    </APIProvider>
+    <MapContainer
+      center={[initial.center.lat, initial.center.lng]}
+      zoom={initial.zoom}
+      maxZoom={20}
+      style={{ width: "100%", height: "100%" }}
+    >
+      <TileLayer
+        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        attribution="Tiles &copy; Esri &mdash; Esri, Maxar, Earthstar Geographics, and the GIS User Community"
+        maxZoom={20}
+        maxNativeZoom={19}
+      />
+      <ClickHandler onClick={onMapClick} />
+      <Recenter lat={center.lat} lng={center.lng} zoom={zoom} />
+      {hives.map((hive) => (
+        <Marker
+          key={hive.id}
+          position={[hive.lat, hive.lng]}
+          icon={hiveIcon}
+          eventHandlers={{ click: () => onHiveClick?.(hive.id) }}
+        />
+      ))}
+      {pendingPin && <Marker position={[pendingPin.lat, pendingPin.lng]} icon={pendingIcon} />}
+    </MapContainer>
   );
 }
