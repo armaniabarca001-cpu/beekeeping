@@ -41,7 +41,7 @@ export default function HiveDemoPage() {
           )}
         </p>
       </div>
-      <div className="flex-1">
+      <div className="relative flex-1">
         <HiveScene
           equipmentWidth="ten_frame"
           boxes={DEMO_BOXES}

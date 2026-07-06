@@ -213,7 +213,7 @@ export default function NewHivePage() {
         </button>
       </div>
 
-      <div className="flex-1 bg-navy-900">
+      <div className="relative flex-1 bg-navy-900">
         <HiveScene equipmentWidth={equipmentWidth} boxes={orderedBoxes} />
       </div>
     </div>

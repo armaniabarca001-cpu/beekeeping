@@ -52,7 +52,7 @@ export function HiveScene({
   }, [sorted]);
 
   return (
-    <div className="h-full w-full">
+    <div className="absolute inset-0">
       <Canvas camera={{ position: [3, 2, 3], fov: 45 }}>
         <ambientLight intensity={0.6} />
         <directionalLight position={[5, 5, 5]} intensity={1} />

@@ -25,7 +25,7 @@ export default function ApiaryDemoPage() {
           {selected && <span className="ml-2 text-honey-700">Selected: {selected}</span>}
         </p>
       </div>
-      <div className="flex-1">
+      <div className="relative flex-1">
         <ApiaryMap
           center={{ lat: 37.7749, lng: -122.4194 }}
           hives={DEMO_HIVES}

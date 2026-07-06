@@ -49,6 +49,24 @@ function Recenter({ lat, lng, zoom }: { lat: number; lng: number; zoom: number }
   return null;
 }
 
+// Leaflet reads its container's size once at construction and only reacts to
+// `window` resize events after that - it has no ResizeObserver of its own. In
+// a flex layout populated by a dynamically-imported (ssr:false) component,
+// the container isn't reliably at its final size at that exact moment, so the
+// map can get stuck thinking it's 0x0. Watching the container directly and
+// calling invalidateSize() fixes that regardless of why the first read was off.
+function SizeFixer() {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    map.invalidateSize();
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [map]);
+  return null;
+}
+
 export function ApiaryMap({ center, zoom = 19, hives, pendingPin, onHiveClick, onMapClick }: ApiaryMapProps) {
   // MapContainer's center/zoom are initial-mount-only in react-leaflet; all
   // subsequent position changes go through the imperative Recenter child.
@@ -59,7 +77,7 @@ export function ApiaryMap({ center, zoom = 19, hives, pendingPin, onHiveClick, o
       center={[initial.center.lat, initial.center.lng]}
       zoom={initial.zoom}
       maxZoom={20}
-      style={{ width: "100%", height: "100%" }}
+      className="absolute inset-0"
     >
       <TileLayer
         url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
@@ -69,6 +87,7 @@ export function ApiaryMap({ center, zoom = 19, hives, pendingPin, onHiveClick, o
       />
       <ClickHandler onClick={onMapClick} />
       <Recenter lat={center.lat} lng={center.lng} zoom={zoom} />
+      <SizeFixer />
       {hives.map((hive) => (
         <Marker
           key={hive.id}
