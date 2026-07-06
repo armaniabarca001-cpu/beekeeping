@@ -108,9 +108,6 @@ export default function NewApiaryPage() {
           pendingPin={pendingPin}
           onMapClick={(lat, lng) => setPendingPin({ lat, lng })}
         />
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-4 py-2 text-xs text-navy-500 shadow">
-          Click the map to place your apiary
-        </div>
       </div>
     </div>
   );

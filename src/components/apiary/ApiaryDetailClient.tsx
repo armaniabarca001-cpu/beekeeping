@@ -29,15 +29,70 @@ export function ApiaryDetailClient({
   const [pendingPin, setPendingPin] = useState<{ lat: number; lng: number } | null>(null);
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="flex items-center justify-between border-b border-slate-100 bg-offwhite-500 px-6 py-4 text-navy-500">
+    <div className="flex flex-1 flex-col md:flex-row">
+      <div className="flex w-full flex-col gap-6 overflow-y-auto bg-offwhite-500 px-6 py-6 text-navy-500 md:w-96 md:shrink-0">
         <div>
-          <h1 className="text-lg font-semibold">{apiaryName}</h1>
+          <Link href="/apiaries" className="text-sm text-slate-500 hover:text-navy-500">
+            &larr; All apiaries
+          </Link>
+          <h1 className="mt-2 text-lg font-semibold">{apiaryName}</h1>
           <p className="text-sm text-slate-500">{address}</p>
         </div>
-        <Link href="/apiaries" className="text-sm text-slate-500 hover:text-navy-500">
-          &larr; All apiaries
-        </Link>
+
+        {pendingPin ? (
+          <div className="flex flex-col gap-3 rounded-lg border border-honey-500 bg-honey-100 p-4">
+            <p className="text-sm font-medium">
+              New hive at {pendingPin.lat.toFixed(5)}, {pendingPin.lng.toFixed(5)}
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  router.push(
+                    `/apiaries/${apiaryId}/hives/new?lat=${pendingPin.lat}&lng=${pendingPin.lng}`,
+                  )
+                }
+                className="rounded-full bg-honey-500 px-4 py-2 text-sm font-medium text-navy-500 hover:bg-honey-300"
+              >
+                Add hive here
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingPin(null)}
+                className="rounded-full border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-white"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="rounded-lg border border-slate-100 bg-white p-4 text-sm text-slate-500">
+            Click anywhere on the map to place a new hive.
+          </p>
+        )}
+
+        <div>
+          <p className="mb-2 text-sm font-medium">
+            Hives ({hives.length})
+          </p>
+          {hives.length === 0 ? (
+            <p className="text-sm text-slate-500">No hives yet - place one on the map.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {hives.map((hive) => (
+                <li key={hive.id}>
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/hives/${hive.id}`)}
+                    className="w-full rounded-lg border border-slate-100 bg-white px-4 py-3 text-left text-sm hover:border-honey-500"
+                  >
+                    {hive.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       <div className="relative flex-1">
@@ -48,38 +103,6 @@ export function ApiaryDetailClient({
           onHiveClick={(hiveId) => router.push(`/hives/${hiveId}`)}
           onMapClick={(lat, lng) => setPendingPin({ lat, lng })}
         />
-
-        {pendingPin && (
-          <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full bg-white px-5 py-3 shadow-lg">
-            <span className="text-sm text-navy-500">
-              New hive at {pendingPin.lat.toFixed(5)}, {pendingPin.lng.toFixed(5)}
-            </span>
-            <button
-              type="button"
-              onClick={() =>
-                router.push(
-                  `/apiaries/${apiaryId}/hives/new?lat=${pendingPin.lat}&lng=${pendingPin.lng}`,
-                )
-              }
-              className="rounded-full bg-honey-500 px-4 py-1.5 text-sm font-medium text-navy-500 hover:bg-honey-300"
-            >
-              Add hive here
-            </button>
-            <button
-              type="button"
-              onClick={() => setPendingPin(null)}
-              className="text-sm text-slate-500 hover:text-navy-500"
-            >
-              Cancel
-            </button>
-          </div>
-        )}
-
-        {!pendingPin && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-4 py-2 text-xs text-slate-500 shadow">
-            Click anywhere on the map to place a new hive
-          </div>
-        )}
       </div>
     </div>
   );

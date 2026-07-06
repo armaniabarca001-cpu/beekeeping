@@ -169,6 +169,9 @@ export function HiveDetailClient({
         >
           % capped honey
         </button>
+        <span className="ml-auto self-center text-xs text-slate-400">
+          Click a frame to see its inspection history
+        </span>
       </div>
 
       <div className="relative flex-1 bg-navy-900">
@@ -178,9 +181,6 @@ export function HiveDetailClient({
           onFrameSelect={handleFrameSelect}
           highlightedFrameKeys={highlightedFrameKeys}
         />
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-4 py-2 text-xs text-navy-500 shadow">
-          Click a frame to see its inspection history
-        </div>
       </div>
 
       {selectedFrameId && (
