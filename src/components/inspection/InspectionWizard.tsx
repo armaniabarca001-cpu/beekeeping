@@ -4,7 +4,14 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BOX_LABELS, type BoxType } from "@/lib/hive-boxes";
-import { emptySideData, sideHasData, type FrameSideData } from "@/lib/inspection-tags";
+import {
+  QUADRANT_KEYS,
+  aggregateQuadrantTags,
+  deriveLocationFromPosition,
+  emptySideData,
+  sideHasData,
+  type FrameSideData,
+} from "@/lib/inspection-tags";
 import { FrameEditor } from "./FrameEditor";
 
 interface FrameRef {
@@ -77,23 +84,29 @@ export function InspectionWizard({ hiveId, hiveName, frames }: InspectionWizardP
       for (const side of ["side_a", "side_b"] as const) {
         const sd = side === "side_a" ? entry.sideA : entry.sideB;
         if (!sideHasData(sd)) continue;
+        const aggregate = aggregateQuadrantTags(sd);
         frameObservations.push({
           frameId: frame.frameId,
           side,
-          hasBrood: sd.hasBrood,
-          hasCappedBrood: sd.hasCappedBrood,
-          hasEggs: sd.hasEggs,
-          hasLarvae: sd.hasLarvae,
+          hasBrood: aggregate.hasBrood,
+          hasCappedBrood: aggregate.hasCappedBrood,
+          hasEggs: aggregate.hasEggs,
+          hasLarvae: aggregate.hasLarvae,
           queenPresent: sd.queenPresent,
-          hasCappedHoney: sd.hasCappedHoney,
-          hasNectar: sd.hasNectar,
+          hasCappedHoney: aggregate.hasCappedHoney,
+          hasNectar: aggregate.hasNectar,
           cappedHoneyPct: sd.cappedHoneyPct ?? undefined,
           notes: sd.notes || undefined,
+          quadrantObservations: QUADRANT_KEYS.filter((q) =>
+            Object.values(sd.quadrants[q]).some(Boolean),
+          ).map((q) => ({ quadrant: q, ...sd.quadrants[q] })),
           queenCells: sd.queenCells.map((qc) => ({
             cellType: qc.cellType,
-            locationOnFrame: qc.locationOnFrame,
+            locationOnFrame: deriveLocationFromPosition(qc.positionX, qc.positionY),
             capped: qc.capped,
             count: qc.count,
+            positionX: qc.positionX,
+            positionY: qc.positionY,
           })),
         });
         if (sd.audioDataUrl) {

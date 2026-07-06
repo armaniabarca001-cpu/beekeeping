@@ -30,6 +30,8 @@ interface FrameObservationInput {
     locationOnFrame: "bottom_edge" | "side_edge" | "mid_face" | "unknown";
     capped?: boolean;
     count?: number;
+    positionX?: number;
+    positionY?: number;
   }[];
 }
 
@@ -126,6 +128,8 @@ export async function POST(request: Request) {
               locationOnFrame: qc.locationOnFrame,
               capped: qc.capped ?? false,
               count: qc.count ?? 1,
+              positionX: qc.positionX,
+              positionY: qc.positionY,
             })),
           },
         })),

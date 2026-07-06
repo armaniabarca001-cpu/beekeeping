@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Environment, Sky } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import { HiveBoxMesh } from "./HiveBoxMesh";
-import { Garden } from "./Garden";
+import { SceneBackground } from "./Backgrounds";
+import type { BackgroundTheme } from "@/lib/background-themes";
 import {
   BOX_HEIGHTS,
   equipmentWidthToUnits,
@@ -18,6 +19,7 @@ interface HiveSceneProps {
   onFrameSelect?: (hiveBoxId: string, frameNumber: number) => void;
   // Keys formatted as `${hiveBoxId}:${frameNumber}`.
   highlightedFrameKeys?: Set<string>;
+  backgroundTheme?: BackgroundTheme;
 }
 
 export function HiveScene({
@@ -25,6 +27,7 @@ export function HiveScene({
   boxes,
   onFrameSelect,
   highlightedFrameKeys,
+  backgroundTheme = "garden",
 }: HiveSceneProps) {
   const [selected, setSelected] = useState<{ hiveBoxId: string; frameNumber: number } | null>(
     null,
@@ -55,11 +58,7 @@ export function HiveScene({
   return (
     <div className="absolute inset-0">
       <Canvas camera={{ position: [3, 1.6, 3], fov: 45 }} shadows>
-        <ambientLight intensity={0.7} />
-        <directionalLight position={[5, 6, 4]} intensity={1.4} castShadow />
-        <Sky sunPosition={[10, 8, 5]} turbidity={6} rayleigh={1.5} />
-        <Environment preset="park" />
-        <Garden hiveRadius={width * 0.7} />
+        <SceneBackground theme={backgroundTheme} hiveRadius={width * 0.7} />
         {positioned.map(({ box, y }) => {
           const highlightedFrameNumbers = highlightedFrameKeys
             ? new Set(

@@ -3,7 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { EquipmentWidth } from "@/lib/hive-boxes";
+import {
+  BACKGROUND_THEMES,
+  BACKGROUND_THEME_LABELS,
+  isBackgroundTheme,
+  type BackgroundTheme,
+} from "@/lib/background-themes";
 import type { HiveBoxSpec } from "./types";
 import { FrameHistoryPanel } from "./FrameHistoryPanel";
 import { WeatherWidget } from "./WeatherWidget";
@@ -23,6 +30,7 @@ interface HiveDetailClientProps {
   apiaryId: string;
   apiaryName: string;
   equipmentWidth: EquipmentWidth;
+  backgroundTheme: string;
   hiveBoxes: HiveBoxWithFrames[];
 }
 
@@ -50,13 +58,44 @@ export function HiveDetailClient({
   apiaryId,
   apiaryName,
   equipmentWidth,
+  backgroundTheme,
   hiveBoxes,
 }: HiveDetailClientProps) {
+  const router = useRouter();
   const [selectedFrameId, setSelectedFrameId] = useState<string | null>(null);
   const [frameStatus, setFrameStatus] = useState<Record<string, FrameStatus>>({});
   const [activeFilters, setActiveFilters] = useState<Set<BooleanFilterKey | typeof PCT_FILTER_KEY>>(
     new Set(),
   );
+  const [deleting, setDeleting] = useState(false);
+  const [theme, setTheme] = useState<BackgroundTheme>(
+    isBackgroundTheme(backgroundTheme) ? backgroundTheme : "garden",
+  );
+
+  async function handleThemeChange(next: BackgroundTheme) {
+    setTheme(next);
+    await fetch(`/api/hives/${hiveId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ backgroundTheme: next }),
+    });
+  }
+
+  async function handleDelete() {
+    if (
+      !confirm(`Delete "${hiveName}"? This removes the hive and all of its inspection history.`)
+    ) {
+      return;
+    }
+    setDeleting(true);
+    const res = await fetch(`/api/hives/${hiveId}`, { method: "DELETE" });
+    if (res.ok) {
+      router.push(`/apiaries/${apiaryId}`);
+    } else {
+      setDeleting(false);
+      alert("Could not delete the hive.");
+    }
+  }
 
   useEffect(() => {
     fetch(`/api/hives/${hiveId}/frame-status`)
@@ -129,6 +168,20 @@ export function HiveDetailClient({
         <WeatherWidget hiveId={hiveId} />
         <div className="flex items-center gap-3">
           <Link
+            href={`/hives/${hiveId}/edit`}
+            className="rounded-full border border-slate-500 px-5 py-2 text-sm font-medium text-offwhite-500 hover:border-honey-500 hover:text-honey-500"
+          >
+            Edit hive
+          </Link>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="rounded-full border border-red-500/60 px-5 py-2 text-sm font-medium text-red-300 hover:border-red-400 hover:text-red-200 disabled:opacity-50"
+          >
+            {deleting ? "Deleting..." : "Delete hive"}
+          </button>
+          <Link
             href={`/hives/${hiveId}/treatments`}
             className="rounded-full border border-slate-500 px-5 py-2 text-sm font-medium text-offwhite-500 hover:border-honey-500 hover:text-honey-500"
           >
@@ -169,9 +222,23 @@ export function HiveDetailClient({
         >
           % capped honey
         </button>
-        <span className="ml-auto self-center text-xs text-slate-400">
+        <span className="self-center text-xs text-slate-400">
           Click a frame to see its inspection history
         </span>
+        <label className="ml-auto flex items-center gap-2 self-center text-xs text-slate-300">
+          Background
+          <select
+            value={theme}
+            onChange={(e) => handleThemeChange(e.target.value as BackgroundTheme)}
+            className="rounded border border-slate-600 bg-navy-500 px-2 py-1 text-xs text-offwhite-500"
+          >
+            {BACKGROUND_THEMES.map((t) => (
+              <option key={t} value={t}>
+                {BACKGROUND_THEME_LABELS[t]}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <div className="relative flex-1 bg-navy-900">
@@ -180,6 +247,7 @@ export function HiveDetailClient({
           boxes={boxes}
           onFrameSelect={handleFrameSelect}
           highlightedFrameKeys={highlightedFrameKeys}
+          backgroundTheme={theme}
         />
       </div>
 

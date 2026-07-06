@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FrameDiagram } from "@/components/inspection/FrameDiagram";
+import { QUADRANT_KEYS, type QuadrantKey, type QuadrantTags } from "@/lib/inspection-tags";
 
 interface QueenCell {
   id: string;
@@ -8,6 +10,8 @@ interface QueenCell {
   locationOnFrame: string;
   capped: boolean;
   count: number;
+  positionX: number | null;
+  positionY: number | null;
 }
 
 interface QuadrantObservation {
@@ -20,6 +24,40 @@ interface QuadrantObservation {
   hasCappedHoney: boolean;
   hasNectar: boolean;
   notes: string | null;
+}
+
+function emptyQuadrants(): Record<QuadrantKey, QuadrantTags> {
+  const empty: QuadrantTags = {
+    hasBrood: false,
+    hasCappedBrood: false,
+    hasEggs: false,
+    hasLarvae: false,
+    hasCappedHoney: false,
+    hasNectar: false,
+  };
+  return {
+    top_left: { ...empty },
+    top_right: { ...empty },
+    bottom_left: { ...empty },
+    bottom_right: { ...empty },
+  };
+}
+
+function toQuadrantMap(observations: QuadrantObservation[]): Record<QuadrantKey, QuadrantTags> {
+  const map = emptyQuadrants();
+  for (const obs of observations) {
+    if ((QUADRANT_KEYS as readonly string[]).includes(obs.quadrant)) {
+      map[obs.quadrant as QuadrantKey] = {
+        hasBrood: obs.hasBrood,
+        hasCappedBrood: obs.hasCappedBrood,
+        hasEggs: obs.hasEggs,
+        hasLarvae: obs.hasLarvae,
+        hasCappedHoney: obs.hasCappedHoney,
+        hasNectar: obs.hasNectar,
+      };
+    }
+  }
+  return map;
 }
 
 interface FrameObservation {
@@ -93,6 +131,28 @@ export function FrameHistoryPanel({
             <p className="text-xs text-slate-500">
               {new Date(obs.inspection.timestamp).toLocaleString()} - {obs.side === "side_a" ? "Side A" : "Side B"}
             </p>
+            <div className="mt-2">
+              <FrameDiagram
+                quadrants={toQuadrantMap(obs.quadrantObservations)}
+                activeBrush={null}
+                onToggleQuadrantTag={() => {}}
+                queenCells={obs.queenCells
+                  .filter((qc) => qc.positionX != null && qc.positionY != null)
+                  .map((qc) => ({
+                    id: qc.id,
+                    cellType: qc.cellType as never,
+                    capped: qc.capped,
+                    count: qc.count,
+                    positionX: qc.positionX!,
+                    positionY: qc.positionY!,
+                  }))}
+                selectedQueenCellId={null}
+                onSelectQueenCell={() => {}}
+                onMoveQueenCell={() => {}}
+                placingQueenCell={false}
+                onPlaceQueenCell={() => {}}
+              />
+            </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {TAG_LABELS.filter(([key]) => obs[key]).map(([key, label]) => (
                 <span

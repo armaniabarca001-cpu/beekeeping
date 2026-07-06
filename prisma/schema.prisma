@@ -77,14 +77,14 @@ enum TargetPest {
 // ---------- Core structure ----------
 
 model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  passwordHash    String?   @map("password_hash")
+  id              String   @id @default(cuid())
+  email           String   @unique
+  passwordHash    String?  @map("password_hash")
   name            String?
   image           String?
-  yearsBeekeeping Int?      @map("years_beekeeping")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  yearsBeekeeping Int?     @map("years_beekeeping")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   apiaries Apiary[]
 
@@ -109,15 +109,16 @@ model Apiary {
 }
 
 model Hive {
-  id             String         @id @default(cuid())
-  apiaryId       String         @map("apiary_id")
-  name           String
-  equipmentWidth EquipmentWidth @map("equipment_width")
-  lat            Float
-  lng            Float
-  createdAt      DateTime       @default(now()) @map("created_at")
-  updatedAt      DateTime       @updatedAt @map("updated_at")
-  deletedAt      DateTime?      @map("deleted_at")
+  id              String         @id @default(cuid())
+  apiaryId        String         @map("apiary_id")
+  name            String
+  equipmentWidth  EquipmentWidth @map("equipment_width")
+  lat             Float
+  lng             Float
+  backgroundTheme String         @default("garden") @map("background_theme")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  deletedAt       DateTime?      @map("deleted_at")
 
   apiary           Apiary            @relation(fields: [apiaryId], references: [id], onDelete: Cascade)
   hiveBoxes        HiveBox[]
@@ -153,9 +154,9 @@ model Frame {
   foundationType FoundationType @map("foundation_type")
   dateInstalled  DateTime       @map("date_installed")
 
-  hiveBox            HiveBox           @relation(fields: [hiveBoxId], references: [id], onDelete: Cascade)
-  inspectionMedia    InspectionMedia[]
-  frameObservations  FrameObservation[]
+  hiveBox           HiveBox            @relation(fields: [hiveBoxId], references: [id], onDelete: Cascade)
+  inspectionMedia   InspectionMedia[]
+  frameObservations FrameObservation[]
 
   @@index([hiveBoxId])
   @@map("frames")
@@ -164,14 +165,14 @@ model Frame {
 // ---------- Inspections & observations ----------
 
 model Inspection {
-  id            String    @id @default(cuid())
-  hiveId        String    @map("hive_id")
-  timestamp     DateTime  @default(now())
-  enteredByUserId String  @map("entered_by_user_id")
-  generalNotes  String?   @map("general_notes")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  deletedAt     DateTime? @map("deleted_at")
+  id              String    @id @default(cuid())
+  hiveId          String    @map("hive_id")
+  timestamp       DateTime  @default(now())
+  enteredByUserId String    @map("entered_by_user_id")
+  generalNotes    String?   @map("general_notes")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
 
   hive              Hive               @relation(fields: [hiveId], references: [id], onDelete: Cascade)
   media             InspectionMedia[]
@@ -216,10 +217,10 @@ model FrameObservation {
   notes          String?
   createdAt      DateTime  @default(now()) @map("created_at")
 
-  inspection          Inspection                 @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
-  frame               Frame                      @relation(fields: [frameId], references: [id], onDelete: Cascade)
+  inspection           Inspection                 @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  frame                Frame                      @relation(fields: [frameId], references: [id], onDelete: Cascade)
   quadrantObservations FrameQuadrantObservation[]
-  queenCells          QueenCell[]
+  queenCells           QueenCell[]
 
   @@index([inspectionId])
   @@index([frameId])
@@ -251,6 +252,10 @@ model QueenCell {
   locationOnFrame    QueenCellLocation @map("location_on_frame")
   capped             Boolean           @default(false)
   count              Int               @default(1)
+  // Free-position placement on the frame diagram (0-1, top-left origin),
+  // in addition to the coarse locationOnFrame category above.
+  positionX          Float?            @map("position_x")
+  positionY          Float?            @map("position_y")
 
   frameObservation FrameObservation @relation(fields: [frameObservationId], references: [id], onDelete: Cascade)
 
