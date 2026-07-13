@@ -169,10 +169,12 @@ export function SceneBackground({
     default:
       return (
         <>
-          <ambientLight intensity={0.7} />
-          <directionalLight position={[5, 6, 4]} intensity={1.4} castShadow />
-          <Sky sunPosition={[10, 8, 5]} turbidity={6} rayleigh={1.5} />
-          <Environment preset="park" />
+          <ambientLight intensity={0.5} />
+          <directionalLight position={[5, 6, 4]} intensity={1.1} castShadow />
+          {/* Real photographed meadow HDRI (Poly Haven, CC0) - both the
+              visible sky and the lighting/reflections come from this one
+              real photo instead of a procedural sky. */}
+          <Environment files="/hdri/garden-meadow.hdr" background backgroundBlurriness={0.02} />
           <Garden hiveRadius={hiveRadius} />
         </>
       );

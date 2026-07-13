@@ -2,7 +2,8 @@
 
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import type * as THREE from "three";
+import { useTexture } from "@react-three/drei";
+import * as THREE from "three";
 
 // Deterministic pseudo-random in [0, 1) so flower/grass placement is stable
 // across re-renders instead of jumping around every time React re-mounts.
@@ -54,24 +55,6 @@ function Flower({
   );
 }
 
-function GrassTuft({ position, phase }: { position: [number, number, number]; phase: number }) {
-  const groupRef = useRef<THREE.Group>(null);
-
-  useFrame(({ clock }) => {
-    if (!groupRef.current) return;
-    groupRef.current.rotation.z = Math.sin(clock.elapsedTime * 0.9 + phase) * 0.25;
-  });
-
-  return (
-    <group ref={groupRef} position={position}>
-      <mesh position={[0, 0.09, 0]}>
-        <coneGeometry args={[0.03, 0.18, 4]} />
-        <meshStandardMaterial color="#4f9350" roughness={0.9} />
-      </mesh>
-    </group>
-  );
-}
-
 export function Garden({ hiveRadius = 1.2 }: { hiveRadius?: number }) {
   const groundRadius = 8;
 
@@ -88,29 +71,25 @@ export function Garden({ hiveRadius = 1.2 }: { hiveRadius?: number }) {
     });
   }, [hiveRadius]);
 
-  const grass = useMemo(() => {
-    const count = 40;
-    return Array.from({ length: count }, (_, i) => {
-      const angle = (i / count) * Math.PI * 2 + pseudoRandom(i + 300) * 0.8;
-      const r = hiveRadius + 0.4 + pseudoRandom(i + 400) * (groundRadius - hiveRadius - 0.6);
-      return {
-        position: [Math.cos(angle) * r, 0, Math.sin(angle) * r] as [number, number, number],
-        phase: pseudoRandom(i + 500) * Math.PI * 2,
-      };
-    });
-  }, [hiveRadius]);
+  const [diffuse, normal] = useTexture(
+    ["/textures/grass-diffuse.jpg", "/textures/grass-normal.jpg"],
+    ([diff, norm]) => {
+      for (const tex of [diff, norm]) {
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(groundRadius, groundRadius);
+      }
+      diff.colorSpace = THREE.SRGBColorSpace;
+    },
+  );
 
   return (
     <>
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <circleGeometry args={[groundRadius, 48]} />
-        <meshStandardMaterial color="#5a9450" roughness={1} />
+        <meshStandardMaterial map={diffuse} normalMap={normal} roughness={0.95} />
       </mesh>
       {flowers.map((f, i) => (
         <Flower key={i} position={f.position} color={f.color} phase={f.phase} />
-      ))}
-      {grass.map((g, i) => (
-        <GrassTuft key={i} position={g.position} phase={g.phase} />
       ))}
     </>
   );
