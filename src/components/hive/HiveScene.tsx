@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
+import { ACESFilmicToneMapping, SRGBColorSpace } from "three";
 import { HiveBoxMesh } from "./HiveBoxMesh";
 import { SceneBackground } from "./Backgrounds";
 import type { BackgroundTheme } from "@/lib/background-themes";
@@ -57,7 +58,14 @@ export function HiveScene({
 
   return (
     <div className="absolute inset-0">
-      <Canvas camera={{ position: [3, 1.6, 3], fov: 45 }} shadows>
+      <Canvas
+        camera={{ position: [3, 1.6, 3], fov: 45 }}
+        shadows
+        gl={{ toneMapping: ACESFilmicToneMapping, outputColorSpace: SRGBColorSpace }}
+        onCreated={({ gl }) => {
+          gl.toneMappingExposure = 1.05;
+        }}
+      >
         <SceneBackground theme={backgroundTheme} hiveRadius={width * 0.7} />
         {positioned.map(({ box, y }) => {
           const highlightedFrameNumbers = highlightedFrameKeys

@@ -15,6 +15,8 @@ import type { HiveBoxSpec } from "./types";
 import { FrameHistoryPanel } from "./FrameHistoryPanel";
 import { WeatherWidget } from "./WeatherWidget";
 import type { FrameStatus } from "@/app/api/hives/[id]/frame-status/route";
+import { Button } from "@/components/ui/Button";
+import { Menu, MenuItem, IconButton } from "@/components/ui/Menu";
 
 const HiveScene = dynamic(() => import("./HiveScene").then((m) => m.HiveScene), {
   ssr: false,
@@ -158,54 +160,59 @@ export function HiveDetailClient({
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex items-center justify-between border-b border-slate-700 bg-navy-500 px-6 py-4 text-offwhite-500">
-        <div>
-          <h1 className="text-lg font-semibold">{hiveName}</h1>
-          <Link href={`/apiaries/${apiaryId}`} className="text-sm text-slate-300 hover:text-honey-500">
-            &larr; {apiaryName}
+      <div className="flex items-center gap-6 border-b border-white/10 bg-navy-500 px-6 py-3.5 text-offwhite-500">
+        <div className="min-w-0">
+          <Link
+            href={`/apiaries/${apiaryId}`}
+            className="text-xs text-slate-400 transition-colors hover:text-honey-500"
+          >
+            {apiaryName}
           </Link>
+          <h1 className="truncate text-base font-semibold leading-tight">{hiveName}</h1>
         </div>
-        <WeatherWidget hiveId={hiveId} />
-        <div className="flex items-center gap-3">
-          <Link
-            href={`/hives/${hiveId}/edit`}
-            className="rounded-full border border-slate-500 px-5 py-2 text-sm font-medium text-offwhite-500 hover:border-honey-500 hover:text-honey-500"
-          >
-            Edit hive
-          </Link>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={deleting}
-            className="rounded-full border border-red-500/60 px-5 py-2 text-sm font-medium text-red-300 hover:border-red-400 hover:text-red-200 disabled:opacity-50"
-          >
-            {deleting ? "Deleting..." : "Delete hive"}
-          </button>
-          <Link
-            href={`/hives/${hiveId}/treatments`}
-            className="rounded-full border border-slate-500 px-5 py-2 text-sm font-medium text-offwhite-500 hover:border-honey-500 hover:text-honey-500"
-          >
+
+        <div className="hidden md:block">
+          <WeatherWidget hiveId={hiveId} />
+        </div>
+
+        <div className="ml-auto flex items-center gap-2">
+          <Button href={`/hives/${hiveId}/treatments`} tone="dark" variant="secondary" size="sm">
             Treatments
-          </Link>
-          <Link
-            href={`/hives/${hiveId}/inspections/new`}
-            className="rounded-full bg-honey-500 px-5 py-2 text-sm font-semibold text-navy-500 hover:bg-honey-300"
-          >
+          </Button>
+          <Button href={`/hives/${hiveId}/inspections/new`} variant="primary" size="sm">
             Start inspection
-          </Link>
+          </Button>
+          <Menu
+            align="right"
+            trigger={
+              <IconButton tone="dark" label="More actions">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <circle cx="8" cy="3" r="1.4" />
+                  <circle cx="8" cy="8" r="1.4" />
+                  <circle cx="8" cy="13" r="1.4" />
+                </svg>
+              </IconButton>
+            }
+          >
+            <MenuItem onClick={() => router.push(`/hives/${hiveId}/edit`)}>Edit hive</MenuItem>
+            <MenuItem onClick={handleDelete} danger>
+              {deleting ? "Deleting..." : "Delete hive"}
+            </MenuItem>
+          </Menu>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 border-b border-slate-700 bg-navy-500 px-6 py-3">
+      <div className="flex flex-wrap items-center gap-2 border-b border-white/10 bg-navy-700 px-6 py-2.5">
+        <span className="mr-1 text-xs font-medium text-slate-300">Highlight</span>
         {BOOLEAN_FILTERS.map(({ key, label }) => (
           <button
             key={key}
             type="button"
             onClick={() => toggleFilter(key)}
-            className={`rounded-full border px-3 py-1 text-xs ${
+            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
               activeFilters.has(key)
-                ? "border-red-500 bg-red-500/20 text-red-300"
-                : "border-slate-600 text-slate-300 hover:border-slate-400"
+                ? "border-honey-500 bg-honey-500/15 text-honey-300"
+                : "border-white/10 text-slate-300 hover:border-white/25"
             }`}
           >
             {label}
@@ -214,23 +221,25 @@ export function HiveDetailClient({
         <button
           type="button"
           onClick={() => toggleFilter(PCT_FILTER_KEY)}
-          className={`rounded-full border px-3 py-1 text-xs ${
+          className={`rounded-full border px-3 py-1 text-xs transition-colors ${
             activeFilters.has(PCT_FILTER_KEY)
-              ? "border-red-500 bg-red-500/20 text-red-300"
-              : "border-slate-600 text-slate-300 hover:border-slate-400"
+              ? "border-honey-500 bg-honey-500/15 text-honey-300"
+              : "border-white/10 text-slate-300 hover:border-white/25"
           }`}
         >
           % capped honey
         </button>
-        <span className="self-center text-xs text-slate-400">
-          Click a frame to see its inspection history
+
+        <span className="ml-2 hidden text-xs text-slate-400 lg:inline">
+          Click a frame for its history
         </span>
-        <label className="ml-auto flex items-center gap-2 self-center text-xs text-slate-300">
+
+        <label className="ml-auto flex items-center gap-2 text-xs text-slate-400">
           Background
           <select
             value={theme}
             onChange={(e) => handleThemeChange(e.target.value as BackgroundTheme)}
-            className="rounded border border-slate-600 bg-navy-500 px-2 py-1 text-xs text-offwhite-500"
+            className="rounded-md border border-white/10 bg-navy-500 px-2.5 py-1.5 text-xs text-offwhite-500 outline-none transition-colors hover:border-white/25 focus:border-honey-500"
           >
             {BACKGROUND_THEMES.map((t) => (
               <option key={t} value={t}>

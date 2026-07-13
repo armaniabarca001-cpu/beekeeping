@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { SignOutButton } from "@/components/sign-out-button";
+import { Button } from "@/components/ui/Button";
 
 export default async function ApiariesPage() {
   const session = await getServerSession(authOptions);
@@ -20,17 +21,14 @@ export default async function ApiariesPage() {
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Your apiaries</h1>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/apiaries/new"
-              className="rounded-full bg-honey-500 px-5 py-2 font-medium text-navy-500 hover:bg-honey-300"
-            >
-              + New apiary
-            </Link>
-            <Link href="/profile" className="text-sm text-slate-500 hover:text-navy-500">
+          <div className="flex items-center gap-2">
+            <Button href="/profile" variant="ghost" size="sm">
               Profile
-            </Link>
+            </Button>
             <SignOutButton />
+            <Button href="/apiaries/new" variant="primary" size="sm">
+              + New apiary
+            </Button>
           </div>
         </div>
 

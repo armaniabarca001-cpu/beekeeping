@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { MiteCountChart, type MiteCountPoint } from "./MiteCountChart";
+import { Button } from "@/components/ui/Button";
 
 const TARGET_PESTS = ["varroa", "small_hive_beetle", "nosema", "other"] as const;
 
@@ -80,9 +80,9 @@ export function TreatmentsClient({ hiveId, hiveName, treatments }: TreatmentsCli
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">Treatments - {hiveName}</h1>
-          <Link href={`/hives/${hiveId}`} className="text-sm text-slate-500 hover:text-navy-500">
+          <Button href={`/hives/${hiveId}`} variant="ghost" size="sm">
             &larr; Back to hive
-          </Link>
+          </Button>
         </div>
 
         <div className="rounded-lg border border-slate-100 bg-white p-4">
@@ -99,7 +99,7 @@ export function TreatmentsClient({ hiveId, hiveName, treatments }: TreatmentsCli
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
                 placeholder="e.g. Formic Pro"
-                className="rounded border border-slate-100 px-3 py-2"
+                className="rounded-md border border-slate-200 px-3 py-2 outline-none transition-colors focus:border-honey-500"
               />
             </label>
             <label className="flex flex-col gap-1">
@@ -107,7 +107,7 @@ export function TreatmentsClient({ hiveId, hiveName, treatments }: TreatmentsCli
               <select
                 value={targetPest}
                 onChange={(e) => setTargetPest(e.target.value as typeof targetPest)}
-                className="rounded border border-slate-100 px-3 py-2"
+                className="rounded-md border border-slate-200 px-3 py-2 outline-none transition-colors focus:border-honey-500"
               >
                 {TARGET_PESTS.map((p) => (
                   <option key={p} value={p}>
@@ -123,7 +123,7 @@ export function TreatmentsClient({ hiveId, hiveName, treatments }: TreatmentsCli
                 min={1}
                 value={stripCount}
                 onChange={(e) => setStripCount(Number(e.target.value))}
-                className="rounded border border-slate-100 px-3 py-2"
+                className="rounded-md border border-slate-200 px-3 py-2 outline-none transition-colors focus:border-honey-500"
               />
             </label>
             <label className="flex flex-col gap-1">
@@ -133,7 +133,7 @@ export function TreatmentsClient({ hiveId, hiveName, treatments }: TreatmentsCli
                 min={1}
                 value={durationDays}
                 onChange={(e) => setDurationDays(Number(e.target.value))}
-                className="rounded border border-slate-100 px-3 py-2"
+                className="rounded-md border border-slate-200 px-3 py-2 outline-none transition-colors focus:border-honey-500"
               />
             </label>
             <label className="flex flex-col gap-1">
@@ -142,7 +142,7 @@ export function TreatmentsClient({ hiveId, hiveName, treatments }: TreatmentsCli
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="rounded border border-slate-100 px-3 py-2"
+                className="rounded-md border border-slate-200 px-3 py-2 outline-none transition-colors focus:border-honey-500"
               />
             </label>
             <label className="flex flex-col gap-1">
@@ -154,21 +154,16 @@ export function TreatmentsClient({ hiveId, hiveName, treatments }: TreatmentsCli
                 onChange={(e) =>
                   setMiteCountBefore(e.target.value === "" ? "" : Number(e.target.value))
                 }
-                className="rounded border border-slate-100 px-3 py-2"
+                className="rounded-md border border-slate-200 px-3 py-2 outline-none transition-colors focus:border-honey-500"
               />
             </label>
           </div>
 
           {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
 
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="mt-4 rounded-full bg-honey-500 px-5 py-2 text-sm font-semibold text-navy-500 hover:bg-honey-300 disabled:opacity-50"
-          >
+          <Button variant="primary" className="mt-4" onClick={handleSubmit} disabled={submitting}>
             {submitting ? "Saving..." : "Log treatment"}
-          </button>
+          </Button>
         </div>
 
         <div className="flex flex-col gap-2">

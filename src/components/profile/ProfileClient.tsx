@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 
 interface ProfileStats {
   apiariesCount: number;
@@ -43,9 +43,9 @@ export function ProfileClient({ name, email, yearsBeekeeping, stats }: ProfileCl
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold">Profile</h1>
-          <Link href="/apiaries" className="text-sm text-slate-500 hover:text-navy-500">
+          <Button href="/apiaries" variant="ghost" size="sm">
             &larr; Apiaries
-          </Link>
+          </Button>
         </div>
 
         <div className="rounded-lg border border-slate-100 bg-white p-5">
@@ -56,7 +56,7 @@ export function ProfileClient({ name, email, yearsBeekeeping, stats }: ProfileCl
               <input
                 value={nameValue}
                 onChange={(e) => setNameValue(e.target.value)}
-                className="rounded border border-slate-100 px-3 py-2"
+                className="rounded-md border border-slate-200 px-3 py-2 outline-none transition-colors focus:border-honey-500"
               />
             </label>
             <label className="flex flex-col gap-1 text-sm">
@@ -66,19 +66,16 @@ export function ProfileClient({ name, email, yearsBeekeeping, stats }: ProfileCl
                 min={0}
                 value={years}
                 onChange={(e) => setYears(Number(e.target.value))}
-                className="rounded border border-slate-100 px-3 py-2"
+                className="rounded-md border border-slate-200 px-3 py-2 outline-none transition-colors focus:border-honey-500"
               />
             </label>
           </div>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={submitting}
-            className="mt-4 rounded-full bg-honey-500 px-5 py-2 text-sm font-semibold text-navy-500 hover:bg-honey-300 disabled:opacity-50"
-          >
-            {submitting ? "Saving..." : "Save"}
-          </button>
-          {saved && <span className="ml-3 text-sm text-slate-500">Saved.</span>}
+          <div className="mt-4 flex items-center gap-3">
+            <Button variant="primary" onClick={handleSave} disabled={submitting}>
+              {submitting ? "Saving..." : "Save"}
+            </Button>
+            {saved && <span className="text-sm text-slate-500">Saved.</span>}
+          </div>
         </div>
 
         <div>

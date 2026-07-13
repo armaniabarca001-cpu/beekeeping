@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { HivePin } from "./ApiaryMap";
+import { Button } from "@/components/ui/Button";
 
 const ApiaryMap = dynamic(() => import("./ApiaryMap").then((m) => m.ApiaryMap), {
   ssr: false,
@@ -45,24 +46,20 @@ export function ApiaryDetailClient({
               New hive at {pendingPin.lat.toFixed(5)}, {pendingPin.lng.toFixed(5)}
             </p>
             <div className="flex gap-2">
-              <button
-                type="button"
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={() =>
                   router.push(
                     `/apiaries/${apiaryId}/hives/new?lat=${pendingPin.lat}&lng=${pendingPin.lng}`,
                   )
                 }
-                className="rounded-full bg-honey-500 px-4 py-2 text-sm font-medium text-navy-500 hover:bg-honey-300"
               >
                 Add hive here
-              </button>
-              <button
-                type="button"
-                onClick={() => setPendingPin(null)}
-                className="rounded-full border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-white"
-              >
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => setPendingPin(null)}>
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         ) : (

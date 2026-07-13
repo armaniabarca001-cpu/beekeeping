@@ -169,13 +169,21 @@ export function SceneBackground({
     default:
       return (
         <>
-          <ambientLight intensity={0.5} />
-          <directionalLight position={[5, 6, 4]} intensity={1.1} castShadow />
           {/* Real photographed meadow HDRI (Poly Haven, CC0) - both the
               visible sky and the lighting/reflections come from this one
-              real photo instead of a procedural sky. */}
+              real photo, so the hive is actually lit BY the backdrop
+              instead of by an unrelated virtual light. A faint fill light
+              only exists to keep a soft contact shadow underneath it. */}
           <Environment files="/hdri/garden-meadow.hdr" background backgroundBlurriness={0.02} />
+          <directionalLight position={[4, 6, 3]} intensity={0.35} castShadow />
           <Garden hiveRadius={hiveRadius} />
+          <ContactShadows
+            position={[0, 0.001, 0]}
+            opacity={0.4}
+            scale={Math.max(hiveRadius * 4, 10)}
+            blur={2}
+            far={4}
+          />
         </>
       );
   }
