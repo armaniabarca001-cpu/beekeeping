@@ -1,27 +1,56 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Edges } from "@react-three/drei";
 import { BOX_HEIGHTS, FRAME_HOLDING_BOX_TYPES, type HiveBoxSpec } from "./types";
-import { getHoneycombTexture, getWoodTexture } from "./textures";
+import {
+  getCorrugatedMetalTexture,
+  getHoneycombTexture,
+  getPaintedTexture,
+  getWoodTexture,
+} from "./textures";
 
 const DEPTH = 1.0;
 const FRAME_THICKNESS = 0.03;
 const BORDER = 0.05;
 
-// Tints multiplied onto the shared wood texture per box type - keeps every
-// wooden component reading as the same pine, just weathered/painted
-// differently (telescoping cover a touch darker, stand more sun-worn).
+// Satin-painted mustard finish for the box body, matching a typical painted
+// Langstroth setup; the stand and entrance reducer stay bare/stained wood.
+const PAINTED_BOX_TYPES = new Set(["deep", "medium_super", "shallow_super", "landing_board"]);
 const BOX_TINTS: Record<string, string> = {
-  hive_stand: "#8f7350",
-  landing_board: "#c9a56e",
-  entrance_reducer: "#b98d55",
-  deep: "#d9b877",
-  medium_super: "#d9b877",
-  shallow_super: "#d9b877",
-  inner_cover: "#cfa96b",
-  outer_cover: "#a9865a",
+  hive_stand: "#8a6a42",
+  landing_board: "#dba52e",
+  entrance_reducer: "#7a5a35",
+  deep: "#dba52e",
+  medium_super: "#dba52e",
+  shallow_super: "#dba52e",
+  inner_cover: "#c9a35f",
+  outer_cover: "#dba52e",
 };
 const EXCLUDER_COLOR = "#c7cdd3";
+const METAL_COLOR = "#c7ccd1";
+const HANDLE_METAL_COLOR = "#9aa0a6";
+
+function HandleHardware({ boxWidth }: { boxWidth: number }) {
+  return (
+    <>
+      {[1, -1].map((sign) => (
+        <group key={sign} position={[(sign * boxWidth) / 2, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <mesh position={[0, 0, sign > 0 ? 0.01 : -0.01]}>
+            <capsuleGeometry args={[0.025, 0.16, 4, 8]} />
+            <meshStandardMaterial color={HANDLE_METAL_COLOR} metalness={0.85} roughness={0.3} />
+          </mesh>
+          {[1, -1].map((end) => (
+            <mesh key={end} position={[end * 0.09, 0, sign > 0 ? 0.005 : -0.005]}>
+              <boxGeometry args={[0.03, 0.045, 0.01]} />
+              <meshStandardMaterial color={HANDLE_METAL_COLOR} metalness={0.7} roughness={0.4} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+    </>
+  );
+}
 
 interface FrameMeshProps {
   x: number;
@@ -107,6 +136,136 @@ interface HiveBoxMeshProps {
   onFrameClick: (hiveBoxId: string, frameNumber: number) => void;
 }
 
+function BoxShell({ box, width, height }: { box: HiveBoxSpec; width: number; height: number }) {
+  const isExcluder = box.boxType === "queen_excluder";
+  const isMetalCover = box.boxType === "outer_cover";
+  const isPainted = PAINTED_BOX_TYPES.has(box.boxType) || isMetalCover;
+  const holdsFrames = FRAME_HOLDING_BOX_TYPES.includes(box.boxType);
+  const tint = BOX_TINTS[box.boxType] ?? "#c9a35f";
+
+  const woodTexture = useMemo(() => getWoodTexture(), []);
+  const plainPainted = useMemo(
+    () => (isPainted ? getPaintedTexture(tint, { withJoints: holdsFrames }) : null),
+    [isPainted, tint, holdsFrames],
+  );
+  const frontPainted = useMemo(
+    () => (isPainted && holdsFrames ? getPaintedTexture(tint, { withHandle: true }) : null),
+    [isPainted, holdsFrames, tint],
+  );
+  const metalTexture = useMemo(() => (isMetalCover ? getCorrugatedMetalTexture() : null), [
+    isMetalCover,
+  ]);
+
+  if (isExcluder) {
+    return (
+      <mesh>
+        <boxGeometry args={[width, height, DEPTH]} />
+        <meshStandardMaterial
+          color={EXCLUDER_COLOR}
+          metalness={0.7}
+          roughness={0.4}
+          transparent
+          opacity={0.6}
+        />
+        <Edges scale={1} color="#00000040" />
+      </mesh>
+    );
+  }
+
+  const opacity = holdsFrames ? 0.3 : 1;
+  const transparent = holdsFrames;
+
+  if (isMetalCover) {
+    // +x, -x, +y, -y, +z, -z
+    return (
+      <mesh>
+        <boxGeometry args={[width, height, DEPTH]} />
+        <meshStandardMaterial attach="material-0" map={woodTexture} color={tint} roughness={0.8} />
+        <meshStandardMaterial attach="material-1" map={woodTexture} color={tint} roughness={0.8} />
+        <meshStandardMaterial
+          attach="material-2"
+          map={metalTexture}
+          color={METAL_COLOR}
+          metalness={0.75}
+          roughness={0.3}
+        />
+        <meshStandardMaterial attach="material-3" map={woodTexture} color={tint} roughness={0.8} />
+        <meshStandardMaterial attach="material-4" map={woodTexture} color={tint} roughness={0.8} />
+        <meshStandardMaterial attach="material-5" map={woodTexture} color={tint} roughness={0.8} />
+        <Edges scale={1} color="#00000030" />
+      </mesh>
+    );
+  }
+
+  if (isPainted && holdsFrames) {
+    return (
+      <group>
+        <mesh>
+          <boxGeometry args={[width, height, DEPTH]} />
+          <meshStandardMaterial
+            attach="material-0"
+            map={plainPainted!}
+            roughness={0.55}
+            transparent={transparent}
+            opacity={opacity}
+          />
+          <meshStandardMaterial
+            attach="material-1"
+            map={plainPainted!}
+            roughness={0.55}
+            transparent={transparent}
+            opacity={opacity}
+          />
+          <meshStandardMaterial
+            attach="material-2"
+            map={plainPainted!}
+            roughness={0.55}
+            transparent={transparent}
+            opacity={opacity}
+          />
+          <meshStandardMaterial
+            attach="material-3"
+            map={plainPainted!}
+            roughness={0.55}
+            transparent={transparent}
+            opacity={opacity}
+          />
+          <meshStandardMaterial
+            attach="material-4"
+            map={frontPainted!}
+            roughness={0.55}
+            transparent={transparent}
+            opacity={opacity}
+          />
+          <meshStandardMaterial
+            attach="material-5"
+            map={frontPainted!}
+            roughness={0.55}
+            transparent={transparent}
+            opacity={opacity}
+          />
+          <Edges scale={1} color="#00000030" />
+        </mesh>
+        <HandleHardware boxWidth={width} />
+      </group>
+    );
+  }
+
+  return (
+    <mesh>
+      <boxGeometry args={[width, height, DEPTH]} />
+      <meshStandardMaterial
+        map={isPainted ? plainPainted! : woodTexture}
+        color={isPainted ? undefined : tint}
+        roughness={isPainted ? 0.55 : 0.85}
+        transparent={transparent}
+        opacity={opacity}
+      />
+      <Edges scale={1} color="#00000030" />
+    </mesh>
+  );
+}
+
 export function HiveBoxMesh({
   box,
   width,
@@ -117,8 +276,6 @@ export function HiveBoxMesh({
 }: HiveBoxMeshProps) {
   const height = BOX_HEIGHTS[box.boxType];
   const holdsFrames = FRAME_HOLDING_BOX_TYPES.includes(box.boxType);
-  const isExcluder = box.boxType === "queen_excluder";
-  const woodTexture = useMemo(() => getWoodTexture(), []);
 
   // Frame 1 = leftmost, facing the entrance (spec Section 4.3).
   // Fewer frames than capacity are spaced wider across the same box width
@@ -134,26 +291,7 @@ export function HiveBoxMesh({
 
   return (
     <group position={[0, y + height / 2, 0]}>
-      <mesh>
-        <boxGeometry args={[width, height, DEPTH]} />
-        {isExcluder ? (
-          <meshStandardMaterial
-            color={EXCLUDER_COLOR}
-            metalness={0.7}
-            roughness={0.4}
-            transparent
-            opacity={0.6}
-          />
-        ) : (
-          <meshStandardMaterial
-            map={woodTexture}
-            color={BOX_TINTS[box.boxType]}
-            roughness={0.85}
-            transparent
-            opacity={holdsFrames ? 0.3 : 1}
-          />
-        )}
-      </mesh>
+      <BoxShell box={box} width={width} height={height} />
       {framePositions.map((x, i) => (
         <FrameMesh
           key={i}

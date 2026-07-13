@@ -27,7 +27,7 @@ export function HiveScene({
   boxes,
   onFrameSelect,
   highlightedFrameKeys,
-  backgroundTheme = "garden",
+  backgroundTheme = "studio",
 }: HiveSceneProps) {
   const [selected, setSelected] = useState<{ hiveBoxId: string; frameNumber: number } | null>(
     null,

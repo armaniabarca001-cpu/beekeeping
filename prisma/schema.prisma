@@ -115,7 +115,7 @@ model Hive {
   equipmentWidth  EquipmentWidth @map("equipment_width")
   lat             Float
   lng             Float
-  backgroundTheme String         @default("garden") @map("background_theme")
+  backgroundTheme String         @default("studio") @map("background_theme")
   createdAt       DateTime       @default(now()) @map("created_at")
   updatedAt       DateTime       @updatedAt @map("updated_at")
   deletedAt       DateTime?      @map("deleted_at")

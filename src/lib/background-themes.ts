@@ -1,8 +1,16 @@
-export const BACKGROUND_THEMES = ["garden", "space", "clouds", "sunset", "underwater"] as const;
+export const BACKGROUND_THEMES = [
+  "garden",
+  "studio",
+  "space",
+  "clouds",
+  "sunset",
+  "underwater",
+] as const;
 export type BackgroundTheme = (typeof BACKGROUND_THEMES)[number];
 
 export const BACKGROUND_THEME_LABELS: Record<BackgroundTheme, string> = {
   garden: "Garden",
+  studio: "Studio",
   space: "Space",
   clouds: "Clouds",
   sunset: "Sunset",

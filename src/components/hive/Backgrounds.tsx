@@ -2,14 +2,55 @@
 
 import { useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Sky, Stars, Cloud, Environment } from "@react-three/drei";
-import type * as THREE from "three";
+import { Sky, Stars, Cloud, Environment, ContactShadows } from "@react-three/drei";
+import * as THREE from "three";
 import { Garden } from "./Garden";
 import type { BackgroundTheme } from "@/lib/background-themes";
 
 function pseudoRandom(seed: number) {
   const x = Math.sin(seed) * 43758.5453;
   return x - Math.floor(x);
+}
+
+let studioBackdropTexture: THREE.CanvasTexture | null = null;
+function getStudioBackdropTexture() {
+  if (studioBackdropTexture) return studioBackdropTexture;
+  const canvas = document.createElement("canvas");
+  canvas.width = 8;
+  canvas.height = 256;
+  const ctx = canvas.getContext("2d")!;
+  const grad = ctx.createLinearGradient(0, 0, 0, 256);
+  grad.addColorStop(0, "#f2ede2");
+  grad.addColorStop(0.55, "#f7f3ea");
+  grad.addColorStop(1, "#e4dccb");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 8, 256);
+  studioBackdropTexture = new THREE.CanvasTexture(canvas);
+  return studioBackdropTexture;
+}
+
+function StudioBackground({ hiveRadius }: { hiveRadius: number }) {
+  const backdrop = useMemo(() => getStudioBackdropTexture(), []);
+  return (
+    <>
+      <color attach="background" args={["#f2ede2"]} />
+      <mesh scale={[30, 30, 30]}>
+        <sphereGeometry args={[1, 32, 32]} />
+        <meshBasicMaterial map={backdrop} side={THREE.BackSide} fog={false} />
+      </mesh>
+      <ambientLight intensity={0.9} />
+      <directionalLight position={[4, 6, 5]} intensity={1.3} castShadow />
+      <directionalLight position={[-5, 3, -3]} intensity={0.4} color="#dce6ff" />
+      <Environment preset="studio" />
+      <ContactShadows
+        position={[0, 0, 0]}
+        opacity={0.45}
+        scale={Math.max(hiveRadius * 3, 6)}
+        blur={2.2}
+        far={4}
+      />
+    </>
+  );
 }
 
 function SpaceBackground({ hiveRadius }: { hiveRadius: number }) {
@@ -114,6 +155,8 @@ export function SceneBackground({
   hiveRadius: number;
 }) {
   switch (theme) {
+    case "studio":
+      return <StudioBackground hiveRadius={hiveRadius} />;
     case "space":
       return <SpaceBackground hiveRadius={hiveRadius} />;
     case "clouds":
